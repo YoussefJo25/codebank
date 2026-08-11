@@ -1,0 +1,41 @@
+import { createTheme } from "@uiw/codemirror-themes";
+import { tags as t } from "@lezer/highlight";
+
+export const codeBankEditorTheme = createTheme({
+  theme: "dark",
+  settings: {
+    background: "#0d1218",
+    foreground: "#dde4ea",
+    caret: "#ff8a3d",
+    selection: "#ff8a3d33",
+    selectionMatch: "#ff8a3d22",
+    lineHighlight: "#161c2480",
+    gutterBackground: "#0d1218",
+    gutterForeground: "#4c5661",
+    gutterActiveForeground: "#b7c2cc",
+    gutterBorder: "#212932",
+    fontSize: "13.5px",
+  },
+  styles: [
+    { tag: t.comment, color: "#6b7885", fontStyle: "italic" },
+    { tag: t.lineComment, color: "#6b7885", fontStyle: "italic" },
+    { tag: t.blockComment, color: "#6b7885", fontStyle: "italic" },
+    { tag: [t.keyword, t.controlKeyword, t.moduleKeyword], color: "#ff9d5c" },
+    { tag: [t.operator, t.punctuation], color: "#b7c2cc" },
+    { tag: [t.string, t.special(t.string)], color: "#7de8c1" },
+    { tag: t.number, color: "#57e0ac" },
+    { tag: t.bool, color: "#57e0ac" },
+    { tag: [t.className, t.typeName], color: "#ffb27a" },
+    { tag: [t.function(t.variableName), t.function(t.propertyName)], color: "#8fc8ff" },
+    { tag: t.definition(t.variableName), color: "#eef2f5" },
+    { tag: t.variableName, color: "#dde4ea" },
+    { tag: t.propertyName, color: "#8fc8ff" },
+    { tag: t.bracket, color: "#8b98a5" },
+    { tag: t.meta, color: "#f0556b" },
+    { tag: t.atom, color: "#57e0ac" },
+    { tag: t.self, color: "#ff9d5c" },
+    { tag: t.angleBracket, color: "#8b98a5" },
+    { tag: t.tagName, color: "#ff9d5c" },
+    { tag: t.attributeName, color: "#8fc8ff" },
+  ],
+});

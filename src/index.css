@@ -1,0 +1,237 @@
+@import "tailwindcss";
+
+@import "@fontsource/cairo/400.css";
+@import "@fontsource/cairo/600.css";
+@import "@fontsource/cairo/700.css";
+@import "@fontsource/cairo/800.css";
+@import "@fontsource/tajawal/300.css";
+@import "@fontsource/tajawal/400.css";
+@import "@fontsource/tajawal/500.css";
+@import "@fontsource/tajawal/700.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/600.css";
+
+@theme {
+  --font-display: "Cairo", "Tajawal", sans-serif;
+  --font-body: "Tajawal", "Cairo", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-ink-950: #07090c;
+  --color-ink-900: #0a0e12;
+  --color-ink-850: #0d1218;
+  --color-ink-800: #10151b;
+  --color-ink-750: #131920;
+  --color-ink-700: #161c24;
+  --color-ink-650: #1a212a;
+  --color-ink-600: #212932;
+  --color-ink-500: #2b3540;
+  --color-ink-400: #3a4753;
+
+  --color-mist-100: #eef2f5;
+  --color-mist-200: #dde4ea;
+  --color-mist-300: #b7c2cc;
+  --color-mist-400: #8b98a5;
+  --color-mist-500: #6b7885;
+  --color-mist-600: #4c5661;
+
+  --color-ember-300: #ffb27a;
+  --color-ember-400: #ff9d5c;
+  --color-ember-500: #ff8a3d;
+  --color-ember-600: #ec6f1f;
+  --color-ember-700: #c85a17;
+
+  --color-jade-300: #7de8c1;
+  --color-jade-400: #57e0ac;
+  --color-jade-500: #3ddc97;
+  --color-jade-600: #26b87c;
+
+  --color-coral-400: #f47186;
+  --color-coral-500: #f0556b;
+  --color-coral-600: #d43e54;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--color-ink-900);
+  color: var(--color-mist-100);
+  font-family: var(--font-body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#root {
+  height: 100svh;
+  width: 100vw;
+}
+
+/* Code / metadata that must stay LTR even inside an RTL page */
+.ltr-scope {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-ember-500) 35%, transparent);
+  color: var(--color-mist-100);
+}
+
+/* Slim, unobtrusive scrollbars matching the dark ink palette */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-500) transparent;
+}
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-ink-500);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-400);
+  background-clip: padding-box;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out;
+}
+
+/* CodeMirror shell tweaks to match the app chrome */
+.cm-editor {
+  height: 100%;
+  font-family: var(--font-mono) !important;
+}
+.cm-editor.cm-focused {
+  outline: none !important;
+}
+.cm-scroller {
+  font-family: var(--font-mono) !important;
+  line-height: 1.65 !important;
+}
+.cm-gutters {
+  border-inline-end: 1px solid var(--color-ink-600) !important;
+}
+
+/* Markdown preview typography */
+.md-preview h1,
+.md-preview h2,
+.md-preview h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-mist-100);
+}
+.md-preview h1 {
+  font-size: 1.5em;
+  margin: 0 0 0.6em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--color-ink-600);
+}
+.md-preview h2 {
+  font-size: 1.25em;
+  margin: 1.2em 0 0.5em;
+}
+.md-preview h3 {
+  font-size: 1.05em;
+  margin: 1em 0 0.4em;
+}
+.md-preview p {
+  margin: 0.65em 0;
+  line-height: 1.85;
+  color: var(--color-mist-200);
+}
+.md-preview ul,
+.md-preview ol {
+  margin: 0.5em 0;
+  padding-inline-start: 1.4em;
+  color: var(--color-mist-200);
+}
+.md-preview li {
+  margin: 0.25em 0;
+  line-height: 1.75;
+}
+.md-preview code {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-family: var(--font-mono);
+  background: var(--color-ink-700);
+  border: 1px solid var(--color-ink-600);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-size: 0.88em;
+  color: var(--color-ember-300);
+}
+.md-preview pre {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
+  background: var(--color-ink-850);
+  border: 1px solid var(--color-ink-600);
+  border-radius: 10px;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+  margin: 0.8em 0;
+}
+.md-preview pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-mist-100);
+}
+.md-preview blockquote {
+  margin: 0.8em 0;
+  padding: 0.4em 1em;
+  border-inline-start: 3px solid var(--color-ember-500);
+  background: var(--color-ink-800);
+  color: var(--color-mist-300);
+  border-radius: 0 6px 6px 0;
+}
+.md-preview a {
+  color: var(--color-ember-400);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.md-preview hr {
+  border: none;
+  border-top: 1px solid var(--color-ink-600);
+  margin: 1.2em 0;
+}
+.md-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.8em 0;
+  font-size: 0.92em;
+}
+.md-preview th,
+.md-preview td {
+  border: 1px solid var(--color-ink-600);
+  padding: 0.4em 0.7em;
+  text-align: start;
+}
+.md-preview th {
+  background: var(--color-ink-750);
+  font-family: var(--font-display);
+}
