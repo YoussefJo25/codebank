@@ -1,5 +1,5 @@
 import { Modal } from "./common/Modal";
-import { Mail, Code2, User } from "lucide-react";
+import { Mail, Code2 } from "lucide-react";
 import { Button } from "./common/Button";
 
 interface AboutModalProps {
