@@ -4,8 +4,8 @@ import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { TopicView } from "./components/Editor/TopicView";
 import { ExportModal, type ExportScope } from "./components/Export/ExportModal";
-import { useStore } from "./store/useStore";
 import { Auth } from "./components/Auth";
+import { ProfileSettings } from "./components/Settings/ProfileSettings";
 import { supabase } from "./lib/supabaseClient";
 
 function App() {
@@ -13,6 +13,7 @@ function App() {
   const folders = useStore((s) => s.folders);
   const selectedTopicId = useStore((s) => s.selectedTopicId);
   const session = useStore((s) => s.session);
+  const currentView = useStore((s) => s.currentView);
 
   const loadFolders = useStore((s) => s.loadFolders);
   const loadTopics = useStore((s) => s.loadTopics);
@@ -75,7 +76,9 @@ function App() {
         </div>
 
         <main className="min-w-0 flex-1 w-full lg:w-auto h-full overflow-y-auto">
-          {selectedTopic ? (
+          {currentView === "settings" ? (
+            <ProfileSettings />
+          ) : selectedTopic ? (
             <TopicView
               key={selectedTopic.id}
               topic={selectedTopic}

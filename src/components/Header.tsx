@@ -1,4 +1,4 @@
-import { Download, FolderOutput, Info, Library, Upload, LogOut, Menu } from "lucide-react";
+import { Download, FolderOutput, Info, Library, Upload, LogOut, Menu, Settings, ArrowRight } from "lucide-react";
 import { useRef, useState } from "react";
 import { useStore } from "../store/useStore";
 import type { BackupFile, CodeBankData } from "../types";
@@ -22,6 +22,8 @@ export function Header({ onExportAll, onToggleSidebar }: HeaderProps) {
   const topics = useStore((s) => s.topics);
   const buildBackup = useStore((s) => s.buildBackup);
   const replaceAll = useStore((s) => s.replaceAll);
+  const currentView = useStore((s) => s.currentView);
+  const setView = useStore((s) => s.setView);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingRestore, setPendingRestore] = useState<CodeBankData | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
@@ -89,6 +91,17 @@ export function Header({ onExportAll, onToggleSidebar }: HeaderProps) {
       <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
         {restoreError && <span className="text-xs text-coral-400 w-full text-center sm:w-auto">{restoreError}</span>}
         <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={handleFileChange} />
+        
+        {currentView === "settings" ? (
+          <Button variant="ghost" size="sm" icon={<ArrowRight size={14} />} onClick={() => setView("dashboard")}>
+            رجوع
+          </Button>
+        ) : (
+          <Button variant="ghost" size="sm" icon={<Settings size={14} />} onClick={() => setView("settings")}>
+            إعدادات
+          </Button>
+        )}
+
         <Button variant="ghost" size="sm" icon={<LogOut size={14} />} onClick={() => useStore.getState().logout()}>
           خروج
         </Button>

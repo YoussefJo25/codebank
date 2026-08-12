@@ -14,6 +14,7 @@ interface StoreState extends CodeBankData {
   session: Session | null;
   user: User | null;
   userProfile: UserProfile | null;
+  currentView: "dashboard" | "settings";
   selectedTopicId: string | null;
   isLoadingFolders: boolean;
   foldersError: string | null;
@@ -21,6 +22,7 @@ interface StoreState extends CodeBankData {
   topicsError: string | null;
 
   setSession: (session: Session | null) => void;
+  setView: (view: "dashboard" | "settings") => void;
   logout: () => Promise<void>;
   loadFolders: () => Promise<void>;
   loadTopics: () => Promise<void>;
@@ -48,6 +50,7 @@ export const useStore = create<StoreState>()(
       session: null,
       user: null,
       userProfile: null,
+      currentView: "dashboard",
       selectedTopicId: null,
       isLoadingFolders: false,
       foldersError: null,
@@ -56,6 +59,8 @@ export const useStore = create<StoreState>()(
 
       setSession: (session) => set({ session, user: session?.user ?? null }),
       
+      setView: (view) => set({ currentView: view }),
+
       logout: async () => {
         await supabase.auth.signOut();
         set({ session: null, user: null, userProfile: null, folders: [], topics: [], selectedTopicId: null });
