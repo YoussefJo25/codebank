@@ -60,7 +60,14 @@ export function ProfileSettings() {
 
     try {
       const publicUrl = await uploadAvatar(user.id, file);
-      await updateProfile(user.id, { avatar_url: publicUrl });
+      await updateProfile(user.id, { 
+        avatar_url: publicUrl,
+        full_name: fullName.trim(),
+        phone_number: phone.trim(),
+        academic_status: academicStatus,
+        university: academicStatus === "طالب" ? university.trim() : null,
+        faculty: academicStatus === "طالب" ? faculty.trim() : null,
+      });
       await loadUserProfile(); // Refresh global state
       setMessage({ type: "success", text: "تم تحديث الصورة بنجاح!" });
     } catch (err: any) {
