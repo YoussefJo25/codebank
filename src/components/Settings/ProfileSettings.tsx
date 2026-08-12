@@ -29,10 +29,17 @@ export function ProfileSettings() {
       setAcademicStatus(userProfile.academic_status || "طالب");
       setUniversity(userProfile.university || "");
       setFaculty(userProfile.faculty || "");
+    } else if (user) {
+      // Fallback if profile row is missing or failed to load
+      setFullName(user.user_metadata?.full_name || "");
+      setPhone(user.user_metadata?.phone_number || "");
+      setAcademicStatus(user.user_metadata?.academic_status || "طالب");
+      setUniversity(user.user_metadata?.university || "");
+      setFaculty(user.user_metadata?.faculty || "");
     }
-  }, [userProfile]);
+  }, [userProfile, user]);
 
-  if (!user || !userProfile) {
+  if (!user) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="animate-spin text-mist-500" size={24} />
@@ -100,9 +107,9 @@ export function ProfileSettings() {
             className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-full border-2 border-ink-600 bg-ink-800 transition-colors hover:border-ember-500"
             onClick={handleAvatarClick}
           >
-            {userProfile.avatar_url ? (
+            {userProfile?.avatar_url || user.user_metadata?.avatar_url ? (
               <img 
-                src={userProfile.avatar_url} 
+                src={userProfile?.avatar_url || user.user_metadata?.avatar_url} 
                 alt="Avatar" 
                 className="h-full w-full object-cover" 
                 onError={(e) => {
@@ -111,7 +118,9 @@ export function ProfileSettings() {
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-mist-500">
-                <span className="text-3xl uppercase">{userProfile.full_name?.[0]}</span>
+                <span className="text-3xl uppercase">
+                  {(userProfile?.full_name || user.user_metadata?.full_name || user.email || "?")[0]}
+                </span>
               </div>
             )}
             
