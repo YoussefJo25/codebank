@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileCode2 } from "lucide-react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar/Sidebar";
@@ -11,7 +11,15 @@ function App() {
   const folders = useStore((s) => s.folders);
   const selectedTopicId = useStore((s) => s.selectedTopicId);
 
+  const loadFolders = useStore((s) => s.loadFolders);
+  const loadTopics = useStore((s) => s.loadTopics);
+
   const [exportScope, setExportScope] = useState<ExportScope | null>(null);
+
+  useEffect(() => {
+    loadFolders();
+    loadTopics();
+  }, [loadFolders, loadTopics]);
 
   const selectedTopic = topics.find((t) => t.id === selectedTopicId);
 

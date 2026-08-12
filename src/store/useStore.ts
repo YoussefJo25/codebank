@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 import { makeId } from "../lib/id";
 import { LANGUAGES } from "../lib/languages";
 import type { BackupFile, CodeBankData, Folder, Language, Topic } from "../types";
+import { fetchFolders, addFolder as addFolderToDb, deleteFolder as deleteFolderFromDb } from "../services/folderService";
+import { fetchTopics, addTopic as addTopicToDb, updateTopic as updateTopicInDb, deleteTopic as deleteTopicFromDb } from "../services/topicService";
 
 const DEFAULT_FOLDER_NAME = "بلا تصنيف";
 
@@ -28,15 +30,21 @@ function seedData(): CodeBankData {
 
 interface StoreState extends CodeBankData {
   selectedTopicId: string | null;
+  isLoadingFolders: boolean;
+  foldersError: string | null;
+  isLoadingTopics: boolean;
+  topicsError: string | null;
 
-  addFolder: (name: string, parentId?: string | null) => string;
+  loadFolders: () => Promise<void>;
+  loadTopics: () => Promise<void>;
+  addFolder: (name: string, parentId?: string | null) => Promise<void>;
   renameFolder: (id: string, name: string) => void;
-  deleteFolder: (id: string) => void;
+  deleteFolder: (id: string) => Promise<void>;
 
-  addTopic: (folderId: string, title: string) => string;
-  updateTopic: (id: string, patch: Partial<Omit<Topic, "id" | "folderId" | "createdAt">>) => void;
-  deleteTopic: (id: string) => void;
-  moveTopic: (id: string, folderId: string) => void;
+  addTopic: (folderId: string, title: string) => Promise<string>;
+  updateTopic: (id: string, patch: Partial<Omit<Topic, "id" | "folderId" | "createdAt">>) => Promise<void>;
+  deleteTopic: (id: string) => Promise<void>;
+  moveTopic: (id: string, folderId: string) => Promise<void>;
 
   selectTopic: (id: string | null) => void;
 
@@ -49,12 +57,43 @@ export const useStore = create<StoreState>()(
     (set, get) => ({
       ...seedData(),
       selectedTopicId: null,
+      isLoadingFolders: false,
+      foldersError: null,
+      isLoadingTopics: false,
+      topicsError: null,
 
-      addFolder: (name, parentId = null) => {
+      loadTopics: async () => {
+        set({ isLoadingTopics: true, topicsError: null });
+        try {
+          const fetchedTopics = await fetchTopics();
+          set({ topics: fetchedTopics, isLoadingTopics: false });
+        } catch (err: any) {
+          set({ topicsError: err.message || "Failed to load topics", isLoadingTopics: false });
+        }
+      },
+
+      loadFolders: async () => {
+        set({ isLoadingFolders: true, foldersError: null });
+        try {
+          const fetchedFolders = await fetchFolders();
+          set({ folders: fetchedFolders, isLoadingFolders: false });
+        } catch (err: any) {
+          set({ foldersError: err.message || "Failed to load folders", isLoadingFolders: false });
+        }
+      },
+
+      addFolder: async (name, parentId = null) => {
         const id = makeId();
         const folder: Folder = { id, parentId, name: name.trim() || DEFAULT_FOLDER_NAME, createdAt: Date.now() };
-        set((s) => ({ folders: [...s.folders, folder] }));
-        return id;
+        
+        try {
+          // Await the db operation
+          await addFolderToDb(folder);
+          // Only update UI if db operation is successful
+          set((s) => ({ folders: [...s.folders, folder] }));
+        } catch (err: any) {
+          set({ foldersError: err.message || "Failed to add folder" });
+        }
       },
 
       renameFolder: (id, name) => {
@@ -65,37 +104,43 @@ export const useStore = create<StoreState>()(
         }));
       },
 
-      deleteFolder: (id) => {
-        set((s) => {
-          // Cascade delete: find all child folder IDs recursively
-          const idsToDelete = new Set<string>([id]);
-          let newAdded = true;
-          while (newAdded) {
-            newAdded = false;
-            for (const f of s.folders) {
-              if (f.parentId && idsToDelete.has(f.parentId) && !idsToDelete.has(f.id)) {
-                idsToDelete.add(f.id);
-                newAdded = true;
+      deleteFolder: async (id) => {
+        try {
+          await deleteFolderFromDb(id);
+          
+          set((s) => {
+            // Cascade delete: find all child folder IDs recursively
+            const idsToDelete = new Set<string>([id]);
+            let newAdded = true;
+            while (newAdded) {
+              newAdded = false;
+              for (const f of s.folders) {
+                if (f.parentId && idsToDelete.has(f.parentId) && !idsToDelete.has(f.id)) {
+                  idsToDelete.add(f.id);
+                  newAdded = true;
+                }
               }
             }
-          }
 
-          const remainingTopics = s.topics.filter((t) => !idsToDelete.has(t.folderId));
-          const remainingFolders = s.folders.filter((f) => !idsToDelete.has(f.id));
-          
-          const wasSelected = s.selectedTopicId
-            ? s.topics.find((t) => t.id === s.selectedTopicId)?.folderId && idsToDelete.has(s.topics.find((t) => t.id === s.selectedTopicId)!.folderId)
-            : false;
+            const remainingTopics = s.topics.filter((t) => !idsToDelete.has(t.folderId));
+            const remainingFolders = s.folders.filter((f) => !idsToDelete.has(f.id));
             
-          return {
-            folders: remainingFolders,
-            topics: remainingTopics,
-            selectedTopicId: wasSelected ? null : s.selectedTopicId,
-          };
-        });
+            const wasSelected = s.selectedTopicId
+              ? s.topics.find((t) => t.id === s.selectedTopicId)?.folderId && idsToDelete.has(s.topics.find((t) => t.id === s.selectedTopicId)!.folderId)
+              : false;
+              
+            return {
+              folders: remainingFolders,
+              topics: remainingTopics,
+              selectedTopicId: wasSelected ? null : s.selectedTopicId,
+            };
+          });
+        } catch (err: any) {
+          set({ foldersError: err.message || "Failed to delete folder" });
+        }
       },
 
-      addTopic: (folderId, title) => {
+      addTopic: async (folderId, title) => {
         const id = makeId();
         const defaultLang: Language = "cpp";
         const topic: Topic = {
@@ -111,27 +156,51 @@ export const useStore = create<StoreState>()(
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
-        set((s) => ({ topics: [...s.topics, topic], selectedTopicId: id }));
-        return id;
+
+        try {
+          await addTopicToDb(topic);
+          set((s) => ({ topics: [...s.topics, topic], selectedTopicId: id }));
+          return id;
+        } catch (err: any) {
+          set({ topicsError: err.message || "Failed to add topic" });
+          return "";
+        }
       },
 
-      updateTopic: (id, patch) => {
-        set((s) => ({
-          topics: s.topics.map((t) => (t.id === id ? { ...t, ...patch, updatedAt: Date.now() } : t)),
-        }));
+      updateTopic: async (id, patch) => {
+        try {
+          const updates = { ...patch, updatedAt: Date.now() };
+          await updateTopicInDb(id, updates);
+          set((s) => ({
+            topics: s.topics.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+          }));
+        } catch (err: any) {
+          set({ topicsError: err.message || "Failed to update topic" });
+        }
       },
 
-      deleteTopic: (id) => {
-        set((s) => ({
-          topics: s.topics.filter((t) => t.id !== id),
-          selectedTopicId: s.selectedTopicId === id ? null : s.selectedTopicId,
-        }));
+      deleteTopic: async (id) => {
+        try {
+          await deleteTopicFromDb(id);
+          set((s) => ({
+            topics: s.topics.filter((t) => t.id !== id),
+            selectedTopicId: s.selectedTopicId === id ? null : s.selectedTopicId,
+          }));
+        } catch (err: any) {
+          set({ topicsError: err.message || "Failed to delete topic" });
+        }
       },
 
-      moveTopic: (id, folderId) => {
-        set((s) => ({
-          topics: s.topics.map((t) => (t.id === id ? { ...t, folderId, updatedAt: Date.now() } : t)),
-        }));
+      moveTopic: async (id, folderId) => {
+        try {
+          const updates = { folderId, updatedAt: Date.now() };
+          await updateTopicInDb(id, updates);
+          set((s) => ({
+            topics: s.topics.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+          }));
+        } catch (err: any) {
+          set({ topicsError: err.message || "Failed to move topic" });
+        }
       },
 
       selectTopic: (id) => set({ selectedTopicId: id }),
@@ -146,7 +215,7 @@ export const useStore = create<StoreState>()(
     {
       name: "codebank-storage",
       version: 1,
-      partialize: (s) => ({ folders: s.folders, topics: s.topics, selectedTopicId: s.selectedTopicId }),
+      partialize: (s) => ({ selectedTopicId: s.selectedTopicId }),
     },
   ),
 );
