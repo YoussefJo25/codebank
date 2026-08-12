@@ -1,4 +1,4 @@
-import { Download, FolderOutput, Info, Library, Upload, LogOut } from "lucide-react";
+import { Download, FolderOutput, Info, Library, Upload, LogOut, Menu } from "lucide-react";
 import { useRef, useState } from "react";
 import { useStore } from "../store/useStore";
 import type { BackupFile, CodeBankData } from "../types";
@@ -8,6 +8,7 @@ import { AboutModal } from "./AboutModal";
 
 interface HeaderProps {
   onExportAll: () => void;
+  onToggleSidebar: () => void;
 }
 
 function isValidBackup(data: unknown): data is CodeBankData {
@@ -16,7 +17,7 @@ function isValidBackup(data: unknown): data is CodeBankData {
   return Array.isArray(d.folders) && Array.isArray(d.topics);
 }
 
-export function Header({ onExportAll }: HeaderProps) {
+export function Header({ onExportAll, onToggleSidebar }: HeaderProps) {
   const folders = useStore((s) => s.folders);
   const topics = useStore((s) => s.topics);
   const buildBackup = useStore((s) => s.buildBackup);
@@ -63,39 +64,50 @@ export function Header({ onExportAll }: HeaderProps) {
   };
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-ink-600 bg-ink-850 px-5">
-      <div className="flex items-center gap-2.5">
-        <div className="grid h-8 w-8 place-items-center rounded-lg bg-ember-500/15 text-ember-400">
-          <Library size={17} />
+    <header className="flex shrink-0 flex-col sm:flex-row items-center justify-between border-b border-ink-600 bg-ink-850 px-5 py-3 sm:py-0 sm:h-14 gap-3 sm:gap-0">
+      <div className="flex items-center justify-between w-full sm:w-auto">
+        <div className="flex items-center gap-2.5">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-ember-500/15 text-ember-400">
+            <Library size={17} />
+          </div>
+          <span className="font-display text-base font-bold text-mist-100">CodeBank</span>
+          <span className="hidden text-xs text-mist-500 md:inline">
+            {folders.length} فولدر · {topics.length} مسألة
+          </span>
         </div>
-        <span className="font-display text-base font-bold text-mist-100">CodeBank</span>
-        <span className="hidden text-xs text-mist-500 sm:inline">
-          {folders.length} فولدر · {topics.length} مسألة
-        </span>
+        
+        {/* Mobile Toggle Button */}
+        <button 
+          onClick={onToggleSidebar}
+          className="lg:hidden p-1.5 text-mist-400 hover:text-mist-100 hover:bg-ink-700 rounded-md transition-colors"
+          aria-label="Toggle Sidebar"
+        >
+          <Menu size={20} />
+        </button>
       </div>
 
-      <div className="flex items-center gap-2">
-        {restoreError && <span className="text-xs text-coral-400">{restoreError}</span>}
+      <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
+        {restoreError && <span className="text-xs text-coral-400 w-full text-center sm:w-auto">{restoreError}</span>}
         <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={handleFileChange} />
         <Button variant="ghost" size="sm" icon={<LogOut size={14} />} onClick={() => useStore.getState().logout()}>
-          تسجيل خروج
+          خروج
         </Button>
         <Button variant="ghost" size="sm" icon={<Upload size={14} />} onClick={handleRestoreClick}>
           استعادة
         </Button>
         <Button variant="ghost" size="sm" icon={<Download size={14} />} onClick={handleBackup}>
-          نسخة احتياطية
+          نسخة
         </Button>
         <button
           onClick={() => setAboutOpen(true)}
-          className="grid h-8 w-8 place-items-center rounded-md border border-ink-600 bg-ink-800 text-mist-400 hover:bg-ink-700 hover:text-mist-100 transition-colors"
+          className="grid h-8 w-8 place-items-center rounded-md border border-ink-600 bg-ink-800 text-mist-400 hover:bg-ink-700 hover:text-mist-100 transition-colors shrink-0"
           aria-label="حول المطور"
           title="حول المطور"
         >
           <Info size={14} />
         </button>
         <Button variant="primary" size="sm" icon={<FolderOutput size={14} />} onClick={onExportAll}>
-          تصدير المرجع الكامل
+          تصدير المرجع
         </Button>
       </div>
 

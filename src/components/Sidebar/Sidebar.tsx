@@ -1,10 +1,14 @@
-import { FolderPlus, Mail } from "lucide-react";
+import { FolderPlus, Mail, X } from "lucide-react";
 import { useState, type KeyboardEvent } from "react";
 import { useStore } from "../../store/useStore";
 import { FolderNode } from "./FolderNode";
 import { TopicRow } from "./TopicRow";
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const folders = useStore((s) => s.folders);
   const topics = useStore((s) => s.topics);
   const selectedTopicId = useStore((s) => s.selectedTopicId);
@@ -39,9 +43,19 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-e border-ink-600 bg-ink-850">
+    <aside className="flex h-full w-72 shrink-0 flex-col border-e border-ink-600 bg-ink-850 shadow-2xl lg:shadow-none">
       <div className="flex items-center justify-between px-4 pb-1 pt-4">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-mist-500">الفولدرات</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-mist-500">الفولدرات</span>
+          {onClose && (
+            <button 
+              onClick={onClose}
+              className="lg:hidden text-mist-500 hover:text-mist-200"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
         <button
           onClick={() => setAddingFolder(true)}
           className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-medium text-mist-400 hover:bg-ink-700 hover:text-jade-400"

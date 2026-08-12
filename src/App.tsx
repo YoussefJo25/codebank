@@ -20,6 +20,7 @@ function App() {
   const setSession = useStore((s) => s.setSession);
 
   const [exportScope, setExportScope] = useState<ExportScope | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,12 +52,29 @@ function App() {
 
   return (
     <div className="flex h-full flex-col">
-      <Header onExportAll={() => setExportScope({ type: "all" })} />
+      <Header 
+        onExportAll={() => setExportScope({ type: "all" })} 
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+      />
 
-      <div className="flex min-h-0 flex-1">
-        <Sidebar />
+      <div className="flex min-h-0 flex-1 relative overflow-hidden">
+        {/* Mobile Backdrop */}
+        {sidebarOpen && (
+          <div 
+            className="absolute inset-0 z-40 bg-ink-950/80 backdrop-blur-sm lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
-        <main className="min-w-0 flex-1">
+        {/* Sidebar Wrapper */}
+        <div className={`
+          absolute inset-y-0 right-0 z-50 transform transition-transform duration-300 lg:relative lg:translate-x-0
+          ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
+        `}>
+          <Sidebar onClose={() => setSidebarOpen(false)} />
+        </div>
+
+        <main className="min-w-0 flex-1 w-full lg:w-auto h-full overflow-y-auto">
           {selectedTopic ? (
             <TopicView
               key={selectedTopic.id}
