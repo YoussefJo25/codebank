@@ -2,10 +2,14 @@ import { supabase } from "../lib/supabaseClient";
 import type { UserProfile } from "../types";
 
 export async function updateProfile(userId: string, updates: Partial<UserProfile>): Promise<void> {
+  const payload = {
+    id: userId,
+    ...updates,
+  };
+
   const { error } = await supabase
     .from("profiles")
-    .update(updates)
-    .eq("id", userId);
+    .upsert(payload);
 
   if (error) {
     throw new Error(error.message);
