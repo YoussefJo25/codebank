@@ -1,6 +1,6 @@
 import CodeMirror from "@uiw/react-codemirror";
 import { useMemo } from "react";
-import { codeBankEditorTheme } from "../../lib/editorTheme";
+import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { LANGUAGES } from "../../lib/languages";
 import type { Language } from "../../types";
 
@@ -18,7 +18,7 @@ export function CodeEditor({ code, language, onChange }: CodeEditorProps) {
       <CodeMirror
         value={code}
         onChange={onChange}
-        theme={codeBankEditorTheme}
+        theme={vscodeDark}
         extensions={extensions}
         height="100%"
         style={{ height: "100%", fontSize: 13.5 }}
@@ -30,6 +30,9 @@ export function CodeEditor({ code, language, onChange }: CodeEditorProps) {
           bracketMatching: true,
           closeBrackets: true,
           autocompletion: true,
+          syntaxHighlighting: true,
+          defaultKeymap: true,
+          history: true,
           tabSize: 4,
         }}
         placeholder="اكتب أو الصق كود الحل هنا…"

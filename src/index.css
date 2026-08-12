@@ -235,3 +235,20 @@ body {
   background: var(--color-ink-750);
   font-family: var(--font-display);
 }
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  body { 
+    direction: rtl; 
+    unicode-bidi: embed; 
+  }
+  pre, code, .cm-editor, .ltr-scope { 
+    direction: ltr !important; 
+    text-align: left !important; 
+    unicode-bidi: isolate; 
+  }
+}

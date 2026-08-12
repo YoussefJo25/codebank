@@ -29,7 +29,7 @@ function seedData(): CodeBankData {
 interface StoreState extends CodeBankData {
   selectedTopicId: string | null;
 
-  addFolder: (name: string) => string;
+  addFolder: (name: string, parentId?: string | null) => string;
   renameFolder: (id: string, name: string) => void;
   deleteFolder: (id: string) => void;
 
@@ -50,9 +50,9 @@ export const useStore = create<StoreState>()(
       ...seedData(),
       selectedTopicId: null,
 
-      addFolder: (name) => {
+      addFolder: (name, parentId = null) => {
         const id = makeId();
-        const folder: Folder = { id, name: name.trim() || DEFAULT_FOLDER_NAME, createdAt: Date.now() };
+        const folder: Folder = { id, parentId, name: name.trim() || DEFAULT_FOLDER_NAME, createdAt: Date.now() };
         set((s) => ({ folders: [...s.folders, folder] }));
         return id;
       },
@@ -67,12 +67,28 @@ export const useStore = create<StoreState>()(
 
       deleteFolder: (id) => {
         set((s) => {
-          const remainingTopics = s.topics.filter((t) => t.folderId !== id);
+          // Cascade delete: find all child folder IDs recursively
+          const idsToDelete = new Set<string>([id]);
+          let newAdded = true;
+          while (newAdded) {
+            newAdded = false;
+            for (const f of s.folders) {
+              if (f.parentId && idsToDelete.has(f.parentId) && !idsToDelete.has(f.id)) {
+                idsToDelete.add(f.id);
+                newAdded = true;
+              }
+            }
+          }
+
+          const remainingTopics = s.topics.filter((t) => !idsToDelete.has(t.folderId));
+          const remainingFolders = s.folders.filter((f) => !idsToDelete.has(f.id));
+          
           const wasSelected = s.selectedTopicId
-            ? s.topics.find((t) => t.id === s.selectedTopicId)?.folderId === id
+            ? s.topics.find((t) => t.id === s.selectedTopicId)?.folderId && idsToDelete.has(s.topics.find((t) => t.id === s.selectedTopicId)!.folderId)
             : false;
+            
           return {
-            folders: s.folders.filter((f) => f.id !== id),
+            folders: remainingFolders,
             topics: remainingTopics,
             selectedTopicId: wasSelected ? null : s.selectedTopicId,
           };

@@ -1,9 +1,11 @@
-import { AlertTriangle, Download, Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AlertTriangle, Download, Printer } from "lucide-react";
+import { useMemo, useState, useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import { useStore } from "../../store/useStore";
 import type { PdfColumns, PdfExportSettings, PdfPageSize, Topic } from "../../types";
 import { Button } from "../common/Button";
 import { Modal } from "../common/Modal";
+import { PdfTemplate } from "./PdfTemplate";
 
 export type ExportScope = { type: "all" } | { type: "topic"; topicId: string };
 
@@ -35,21 +37,23 @@ export function ExportModal({ scope, onClose }: ExportModalProps) {
 
   const patch = (p: Partial<PdfExportSettings>) => setSettings((s) => ({ ...s, ...p }));
 
-  const handleExport = async () => {
-    setStatus("generating");
-    try {
-      const { exportPdf } = await import("../../lib/pdf/pdfBuilder");
-      if (scope?.type === "topic" && singleTopic) {
-        await exportPdf([singleTopic], folders, settings, "single");
-      } else {
-        await exportPdf(includedTopics, folders, settings, "full");
-      }
+  const contentRef = useRef<HTMLDivElement>(null);
+  
+  const handlePrint = useReactToPrint({
+    contentRef,
+    documentTitle: settings.title || "CodeBank-Reference",
+    onAfterPrint: () => {
       setStatus("idle");
       onClose();
-    } catch (err) {
-      console.error(err);
-      setStatus("error");
+    },
+    onBeforeGetContent: () => {
+      setStatus("generating");
+      return Promise.resolve();
     }
+  });
+
+  const handleExport = () => {
+    handlePrint();
   };
 
   if (!scope) return null;
@@ -176,11 +180,22 @@ export function ExportModal({ scope, onClose }: ExportModalProps) {
             size="sm"
             disabled={exportDisabled}
             onClick={handleExport}
-            icon={status === "generating" ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+            icon={status === "generating" ? <Printer size={14} className="animate-pulse" /> : <Printer size={14} />}
           >
-            {status === "generating" ? "جاري الإنشاء…" : "تصدير PDF"}
+            {status === "generating" ? "تجهيز الطباعة…" : "طباعة / حفظ كـ PDF"}
           </Button>
         </div>
+      </div>
+      
+      {/* Hidden PDF template for printing */}
+      <div className="hidden">
+        <PdfTemplate 
+          ref={contentRef}
+          topics={isSingle && singleTopic ? [singleTopic] : includedTopics}
+          folders={folders}
+          settings={settings}
+          mode={isSingle ? "single" : "full"}
+        />
       </div>
     </Modal>
   );

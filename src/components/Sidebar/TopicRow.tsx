@@ -8,18 +8,20 @@ interface TopicRowProps {
   active: boolean;
   onSelect: () => void;
   onDelete: () => void;
+  depth?: number;
 }
 
-export function TopicRow({ topic, active, onSelect, onDelete }: TopicRowProps) {
+export function TopicRow({ topic, active, onSelect, onDelete, depth = 0 }: TopicRowProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
     <>
       <div
         onClick={onSelect}
-        className={`group flex cursor-pointer items-center gap-2 rounded-md py-1.5 ps-7 pe-2 text-sm transition-colors ${
+        className={`group flex cursor-pointer items-center gap-2 rounded-md py-1.5 pe-2 text-sm transition-colors ${
           active ? "bg-ember-500/12 text-ember-300" : "text-mist-300 hover:bg-ink-700 hover:text-mist-100"
         }`}
+        style={{ paddingInlineStart: `${depth + 1.75}rem` }}
       >
         <FileCode2 size={14} className="shrink-0 opacity-70" />
         <span className="min-w-0 flex-1 truncate">{topic.title}</span>

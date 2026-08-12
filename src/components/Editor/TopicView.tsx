@@ -13,12 +13,14 @@ type Tab = "code" | "explanation";
 interface TopicViewProps {
   topic: Topic;
   folder: Folder | undefined;
+  folders: Folder[];
   onExportTopic: (topicId: string) => void;
 }
 
-export function TopicView({ topic, folder, onExportTopic }: TopicViewProps) {
+export function TopicView({ topic, folder, folders, onExportTopic }: TopicViewProps) {
   const updateTopic = useStore((s) => s.updateTopic);
   const deleteTopic = useStore((s) => s.deleteTopic);
+  const moveTopic = useStore((s) => s.moveTopic);
   const [tab, setTab] = useState<Tab>("code");
   const [editingTitle, setEditingTitle] = useState(false);
   const [draftTitle, setDraftTitle] = useState(topic.title);
@@ -31,13 +33,39 @@ export function TopicView({ topic, folder, onExportTopic }: TopicViewProps) {
     setEditingTitle(false);
   };
 
+  const getBreadcrumb = (folderId: string): string => {
+    const path: string[] = [];
+    let currentId: string | null | undefined = folderId;
+    while (currentId) {
+      const f = folders.find((f) => f.id === currentId);
+      if (f) {
+        path.unshift(f.name);
+        currentId = f.parentId;
+      } else {
+        break;
+      }
+    }
+    return path.join(" > ");
+  };
+
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col">
       <div className="flex items-start justify-between gap-4 border-b border-ink-600 px-6 py-4">
         <div className="min-w-0">
-          {folder && (
-            <div className="mb-1 truncate text-[11px] font-medium text-mist-500">{folder.name}</div>
-          )}
+          <div className="mb-1">
+            <select
+              value={topic.folderId}
+              onChange={(e) => moveTopic(topic.id, e.target.value)}
+              className="ltr-scope truncate rounded border-none bg-transparent text-[11px] font-medium text-mist-500 outline-none hover:bg-ink-700 focus:bg-ink-700"
+              style={{ direction: 'rtl' }}
+            >
+              {folders.map(f => (
+                <option key={f.id} value={f.id}>
+                  {getBreadcrumb(f.id)}
+                </option>
+              ))}
+            </select>
+          </div>
           {editingTitle ? (
             <input
               autoFocus

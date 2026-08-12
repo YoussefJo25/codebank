@@ -16,6 +16,7 @@ export interface Topic {
 
 export interface Folder {
   id: string;
+  parentId?: string | null;
   name: string;
   createdAt: number;
 }

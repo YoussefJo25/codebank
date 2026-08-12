@@ -72,14 +72,18 @@ export function Sidebar() {
             ابدأ بإنشاء أول فولدر لتنظيم مسائلك.
           </div>
         ) : (
-          folders.map((folder) => (
+          folders.filter(f => !f.parentId).map((folder) => (
             <FolderNode
               key={folder.id}
               folder={folder}
-              topics={topics.filter((t) => t.folderId === folder.id)}
+              allFolders={folders}
+              allTopics={topics}
               expanded={!collapsedIds.has(folder.id)}
               onToggleExpand={() => toggleExpand(folder.id)}
+              collapsedIds={collapsedIds}
+              toggleExpand={toggleExpand}
               selectedTopicId={selectedTopicId}
+              depth={0}
             />
           ))
         )}

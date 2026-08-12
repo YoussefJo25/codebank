@@ -29,6 +29,7 @@ function App() {
               key={selectedTopic.id}
               topic={selectedTopic}
               folder={selectedFolder}
+              folders={folders}
               onExportTopic={(topicId) => setExportScope({ type: "topic", topicId })}
             />
           ) : (

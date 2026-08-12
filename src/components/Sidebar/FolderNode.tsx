@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Folder, FolderOpen, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Folder, FolderOpen, FolderPlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, type KeyboardEvent } from "react";
 import { useStore } from "../../store/useStore";
 import type { Folder as FolderType, Topic } from "../../types";
@@ -7,13 +7,28 @@ import { TopicRow } from "./TopicRow";
 
 interface FolderNodeProps {
   folder: FolderType;
-  topics: Topic[];
+  allFolders: FolderType[];
+  allTopics: Topic[];
   expanded: boolean;
   onToggleExpand: () => void;
+  collapsedIds: Set<string>;
+  toggleExpand: (id: string) => void;
   selectedTopicId: string | null;
+  depth: number;
 }
 
-export function FolderNode({ folder, topics, expanded, onToggleExpand, selectedTopicId }: FolderNodeProps) {
+export function FolderNode({ 
+  folder, 
+  allFolders, 
+  allTopics, 
+  expanded, 
+  onToggleExpand, 
+  collapsedIds,
+  toggleExpand,
+  selectedTopicId, 
+  depth 
+}: FolderNodeProps) {
+  const addFolder = useStore((s) => s.addFolder);
   const renameFolder = useStore((s) => s.renameFolder);
   const deleteFolder = useStore((s) => s.deleteFolder);
   const addTopic = useStore((s) => s.addTopic);
@@ -23,10 +38,29 @@ export function FolderNode({ folder, topics, expanded, onToggleExpand, selectedT
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(folder.name);
   const [addingTopic, setAddingTopic] = useState(false);
+  const [addingSubFolder, setAddingSubFolder] = useState(false);
   const [draftTopic, setDraftTopic] = useState("");
+  const [draftSubFolder, setDraftSubFolder] = useState("");
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
+  const topics = allTopics.filter(t => t.folderId === folder.id);
+  const childFolders = allFolders.filter(f => f.parentId === folder.id);
   const includedCount = topics.filter((t) => t.includeInExport).length;
+
+  const getRecursiveCounts = (folderId: string): { fCount: number, tCount: number } => {
+    let fCount = 0;
+    let tCount = allTopics.filter(t => t.folderId === folderId).length;
+    const children = allFolders.filter(f => f.parentId === folderId);
+    fCount += children.length;
+    for (const child of children) {
+      const counts = getRecursiveCounts(child.id);
+      fCount += counts.fCount;
+      tCount += counts.tCount;
+    }
+    return { fCount, tCount };
+  };
+
+  const { fCount: totalChildFolders, tCount: totalChildTopics } = getRecursiveCounts(folder.id);
 
   const commitRename = () => {
     if (draftName.trim() && draftName.trim() !== folder.name) {
@@ -63,9 +97,30 @@ export function FolderNode({ folder, topics, expanded, onToggleExpand, selectedT
     }
   };
 
+  const commitAddSubFolder = () => {
+    const name = draftSubFolder.trim();
+    if (name) {
+      addFolder(name, folder.id);
+      if (!expanded) onToggleExpand();
+    }
+    setDraftSubFolder("");
+    setAddingSubFolder(false);
+  };
+
+  const onAddSubFolderKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") commitAddSubFolder();
+    if (e.key === "Escape") {
+      setDraftSubFolder("");
+      setAddingSubFolder(false);
+    }
+  };
+
   return (
     <div className="mb-0.5">
-      <div className="group flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm hover:bg-ink-700">
+      <div 
+        className="group flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm hover:bg-ink-700"
+        style={{ paddingInlineStart: `${depth + 0.5}rem` }}
+      >
         <button
           onClick={onToggleExpand}
           className="grid h-5 w-5 shrink-0 place-items-center text-mist-500 hover:text-mist-200"
@@ -112,6 +167,14 @@ export function FolderNode({ folder, topics, expanded, onToggleExpand, selectedT
             <Plus size={13} />
           </button>
           <button
+            onClick={() => setAddingSubFolder(true)}
+            className="rounded p-1 text-mist-500 hover:bg-ink-650 hover:text-ember-400"
+            aria-label="إضافة فولدر فرعي"
+            title="إضافة فولدر فرعي"
+          >
+            <FolderPlus size={13} />
+          </button>
+          <button
             onClick={() => setEditing(true)}
             className="rounded p-1 text-mist-500 hover:bg-ink-650 hover:text-mist-100"
             aria-label="إعادة تسمية الفولدر"
@@ -132,6 +195,21 @@ export function FolderNode({ folder, topics, expanded, onToggleExpand, selectedT
 
       {expanded && (
         <div className="mt-0.5">
+          {childFolders.map(child => (
+            <FolderNode
+              key={child.id}
+              folder={child}
+              allFolders={allFolders}
+              allTopics={allTopics}
+              expanded={!collapsedIds.has(child.id)}
+              onToggleExpand={() => toggleExpand(child.id)}
+              collapsedIds={collapsedIds}
+              toggleExpand={toggleExpand}
+              selectedTopicId={selectedTopicId}
+              depth={depth + 1}
+            />
+          ))}
+
           {topics.map((topic) => (
             <TopicRow
               key={topic.id}
@@ -139,11 +217,26 @@ export function FolderNode({ folder, topics, expanded, onToggleExpand, selectedT
               active={topic.id === selectedTopicId}
               onSelect={() => selectTopic(topic.id)}
               onDelete={() => deleteTopic(topic.id)}
+              depth={depth + 1}
             />
           ))}
 
-          {addingTopic ? (
-            <div className="flex items-center gap-2 py-1 ps-7 pe-2">
+          {addingSubFolder && (
+            <div className="flex items-center gap-2 py-1 pe-2" style={{ paddingInlineStart: `${depth + 2.75}rem` }}>
+              <input
+                autoFocus
+                value={draftSubFolder}
+                onChange={(e) => setDraftSubFolder(e.target.value)}
+                onBlur={commitAddSubFolder}
+                onKeyDown={onAddSubFolderKeyDown}
+                placeholder="اسم الفولدر الفرعي…"
+                className="min-w-0 flex-1 rounded border border-ember-500/50 bg-ink-750 px-2 py-1 text-xs text-mist-100 outline-none placeholder:text-mist-500"
+              />
+            </div>
+          )}
+
+          {addingTopic && (
+            <div className="flex items-center gap-2 py-1 pe-2" style={{ paddingInlineStart: `${depth + 2.75}rem` }}>
               <input
                 autoFocus
                 value={draftTopic}
@@ -154,15 +247,16 @@ export function FolderNode({ folder, topics, expanded, onToggleExpand, selectedT
                 className="min-w-0 flex-1 rounded border border-jade-500/50 bg-ink-750 px-2 py-1 text-xs text-mist-100 outline-none placeholder:text-mist-500"
               />
             </div>
-          ) : (
-            topics.length === 0 && (
-              <button
-                onClick={() => setAddingTopic(true)}
-                className="flex w-full items-center gap-2 py-1.5 ps-7 pe-2 text-xs text-mist-500 hover:text-mist-300"
-              >
-                <Plus size={12} /> إضافة أول مسألة في هذا الفولدر
-              </button>
-            )
+          )}
+
+          {topics.length === 0 && childFolders.length === 0 && !addingTopic && !addingSubFolder && (
+            <button
+              onClick={() => setAddingTopic(true)}
+              className="flex w-full items-center gap-2 py-1.5 pe-2 text-xs text-mist-500 hover:text-mist-300"
+              style={{ paddingInlineStart: `${depth + 2.75}rem` }}
+            >
+              <Plus size={12} /> إضافة أول مسألة هنا
+            </button>
           )}
         </div>
       )}
@@ -171,8 +265,8 @@ export function FolderNode({ folder, topics, expanded, onToggleExpand, selectedT
         open={confirmDeleteOpen}
         title="حذف الفولدر"
         message={
-          topics.length > 0
-            ? `هذا الفولدر يحتوي على ${topics.length} مسألة. حذف الفولدر سيحذف كل المسائل بداخله نهائيًا. هل تريد المتابعة؟`
+          totalChildTopics > 0 || totalChildFolders > 0
+            ? `هذا الفولدر يحتوي على ${totalChildTopics} مسألة و ${totalChildFolders} فولدر فرعي. حذف الفولدر سيحذف كل شيء بداخله نهائيًا. هل تريد المتابعة؟`
             : `هل أنت متأكد من حذف فولدر "${folder.name}"؟`
         }
         confirmLabel="حذف الفولدر وكل ما بداخله"
