@@ -3,32 +3,12 @@ import { persist } from "zustand/middleware";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
 import { makeId } from "../lib/id";
-import { LANGUAGES } from "../lib/languages";
 import type { BackupFile, CodeBankData, Folder, Language, Topic, UserProfile } from "../types";
 import { fetchFolders, addFolder as addFolderToDb, deleteFolder as deleteFolderFromDb } from "../services/folderService";
 import { fetchTopics, addTopic as addTopicToDb, updateTopic as updateTopicInDb, deleteTopic as deleteTopicFromDb } from "../services/topicService";
 
 const DEFAULT_FOLDER_NAME = "بلا تصنيف";
 
-function seedData(): CodeBankData {
-  const folderId = makeId();
-  const folder: Folder = { id: folderId, name: "Dynamic Programming", createdAt: Date.now() };
-  const topic: Topic = {
-    id: makeId(),
-    folderId,
-    title: "أطول متتالية متزايدة (LIS)",
-    language: "cpp",
-    code: LANGUAGES.cpp.sample,
-    explanation:
-      "## المسألة\nاكتب هنا نص المسألة كما وردت.\n\n## الفكرة (Approach)\nاشرح هنا خطوات الحل والـ intuition ورا الحل.\n\n## التعقيد الزمني والمكاني\n- Time: O(N log N)\n- Space: O(N)\n",
-    tags: ["dp", "binary-search"],
-    complexity: "O(N log N)",
-    includeInExport: true,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
-  return { folders: [folder], topics: [topic] };
-}
 
 interface StoreState extends CodeBankData {
   session: Session | null;
