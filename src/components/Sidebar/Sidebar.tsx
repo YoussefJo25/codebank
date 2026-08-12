@@ -2,6 +2,7 @@ import { FolderPlus } from "lucide-react";
 import { useState, type KeyboardEvent } from "react";
 import { useStore } from "../../store/useStore";
 import { FolderNode } from "./FolderNode";
+import { TopicRow } from "./TopicRow";
 
 export function Sidebar() {
   const folders = useStore((s) => s.folders);
@@ -87,6 +88,16 @@ export function Sidebar() {
             />
           ))
         )}
+
+        {topics.filter((t) => !t.folderId).map((topic) => (
+          <TopicRow 
+            key={topic.id} 
+            topic={topic} 
+            active={topic.id === selectedTopicId}
+            onSelect={() => useStore.getState().selectTopic(topic.id)}
+            onDelete={() => useStore.getState().deleteTopic(topic.id)}
+          />
+        ))}
       </div>
     </aside>
   );

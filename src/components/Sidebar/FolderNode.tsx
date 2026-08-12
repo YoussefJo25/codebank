@@ -210,7 +210,7 @@ export function FolderNode({
             />
           ))}
 
-          {topics.map((topic) => (
+          {allTopics.filter((t) => t.folderId === folder.id).map((topic) => (
             <TopicRow
               key={topic.id}
               topic={topic}
