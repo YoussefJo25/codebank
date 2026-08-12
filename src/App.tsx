@@ -4,6 +4,7 @@ import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { TopicView } from "./components/Editor/TopicView";
 import { ExportModal, type ExportScope } from "./components/Export/ExportModal";
+import { useStore } from "./store/useStore";
 import { Auth } from "./components/Auth";
 import { ProfileSettings } from "./components/Settings/ProfileSettings";
 import { supabase } from "./lib/supabaseClient";
