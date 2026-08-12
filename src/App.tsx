@@ -14,7 +14,6 @@ function App() {
   const [exportScope, setExportScope] = useState<ExportScope | null>(null);
 
   const selectedTopic = topics.find((t) => t.id === selectedTopicId);
-  const selectedFolder = selectedTopic ? folders.find((f) => f.id === selectedTopic.folderId) : undefined;
 
   return (
     <div className="flex h-full flex-col">
@@ -28,7 +27,6 @@ function App() {
             <TopicView
               key={selectedTopic.id}
               topic={selectedTopic}
-              folder={selectedFolder}
               folders={folders}
               onExportTopic={(topicId) => setExportScope({ type: "topic", topicId })}
             />

@@ -1,4 +1,4 @@
-import { AlertTriangle, Download, Printer } from "lucide-react";
+import { AlertTriangle, Printer } from "lucide-react";
 import { useMemo, useState, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useStore } from "../../store/useStore";
@@ -46,6 +46,7 @@ export function ExportModal({ scope, onClose }: ExportModalProps) {
       setStatus("idle");
       onClose();
     },
+    // @ts-ignore
     onBeforeGetContent: () => {
       setStatus("generating");
       return Promise.resolve();

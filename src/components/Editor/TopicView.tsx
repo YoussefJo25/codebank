@@ -12,12 +12,11 @@ type Tab = "code" | "explanation";
 
 interface TopicViewProps {
   topic: Topic;
-  folder: Folder | undefined;
   folders: Folder[];
   onExportTopic: (topicId: string) => void;
 }
 
-export function TopicView({ topic, folder, folders, onExportTopic }: TopicViewProps) {
+export function TopicView({ topic, folders, onExportTopic }: TopicViewProps) {
   const updateTopic = useStore((s) => s.updateTopic);
   const deleteTopic = useStore((s) => s.deleteTopic);
   const moveTopic = useStore((s) => s.moveTopic);
