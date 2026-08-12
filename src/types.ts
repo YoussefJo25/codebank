@@ -1,5 +1,16 @@
 export type Language = "cpp" | "python" | "java" | "javascript";
 
+export interface UserProfile {
+  id: string;
+  full_name: string;
+  phone_number: string;
+  academic_status: string;
+  university?: string | null;
+  faculty?: string | null;
+  gender: string;
+  avatar_url?: string | null;
+}
+
 export interface Topic {
   id: string;
   folderId: string;

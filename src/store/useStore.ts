@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "../lib/supabaseClient";
 import { makeId } from "../lib/id";
 import { LANGUAGES } from "../lib/languages";
-import type { BackupFile, CodeBankData, Folder, Language, Topic } from "../types";
+import type { BackupFile, CodeBankData, Folder, Language, Topic, UserProfile } from "../types";
 import { fetchFolders, addFolder as addFolderToDb, deleteFolder as deleteFolderFromDb } from "../services/folderService";
 import { fetchTopics, addTopic as addTopicToDb, updateTopic as updateTopicInDb, deleteTopic as deleteTopicFromDb } from "../services/topicService";
 
@@ -29,14 +31,20 @@ function seedData(): CodeBankData {
 }
 
 interface StoreState extends CodeBankData {
+  session: Session | null;
+  user: User | null;
+  userProfile: UserProfile | null;
   selectedTopicId: string | null;
   isLoadingFolders: boolean;
   foldersError: string | null;
   isLoadingTopics: boolean;
   topicsError: string | null;
 
+  setSession: (session: Session | null) => void;
+  logout: () => Promise<void>;
   loadFolders: () => Promise<void>;
   loadTopics: () => Promise<void>;
+  loadUserProfile: () => Promise<void>;
   addFolder: (name: string, parentId?: string | null) => Promise<void>;
   renameFolder: (id: string, name: string) => void;
   deleteFolder: (id: string) => Promise<void>;
@@ -55,14 +63,44 @@ interface StoreState extends CodeBankData {
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
-      ...seedData(),
+      folders: [],
+      topics: [],
+      session: null,
+      user: null,
+      userProfile: null,
       selectedTopicId: null,
       isLoadingFolders: false,
       foldersError: null,
       isLoadingTopics: false,
       topicsError: null,
 
+      setSession: (session) => set({ session, user: session?.user ?? null }),
+      
+      logout: async () => {
+        await supabase.auth.signOut();
+        set({ session: null, user: null, userProfile: null, folders: [], topics: [], selectedTopicId: null });
+      },
+
+      loadUserProfile: async () => {
+        const { session } = get();
+        if (!session) return;
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+          if (!error && data) {
+            set({ userProfile: data as UserProfile });
+          }
+        } catch (err) {
+          console.error("Failed to load user profile", err);
+        }
+      },
+
       loadTopics: async () => {
+        const { session } = get();
+        if (!session) return;
         set({ isLoadingTopics: true, topicsError: null });
         try {
           const fetchedTopics = await fetchTopics();
@@ -73,6 +111,8 @@ export const useStore = create<StoreState>()(
       },
 
       loadFolders: async () => {
+        const { session } = get();
+        if (!session) return;
         set({ isLoadingFolders: true, foldersError: null });
         try {
           const fetchedFolders = await fetchFolders();

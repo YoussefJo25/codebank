@@ -1,4 +1,4 @@
-import { Download, FolderOutput, Info, Library, Upload } from "lucide-react";
+import { Download, FolderOutput, Info, Library, Upload, LogOut } from "lucide-react";
 import { useRef, useState } from "react";
 import { useStore } from "../store/useStore";
 import type { BackupFile, CodeBankData } from "../types";
@@ -77,6 +77,9 @@ export function Header({ onExportAll }: HeaderProps) {
       <div className="flex items-center gap-2">
         {restoreError && <span className="text-xs text-coral-400">{restoreError}</span>}
         <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={handleFileChange} />
+        <Button variant="ghost" size="sm" icon={<LogOut size={14} />} onClick={() => useStore.getState().logout()}>
+          تسجيل خروج
+        </Button>
         <Button variant="ghost" size="sm" icon={<Upload size={14} />} onClick={handleRestoreClick}>
           استعادة
         </Button>

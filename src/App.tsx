@@ -5,21 +5,47 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import { TopicView } from "./components/Editor/TopicView";
 import { ExportModal, type ExportScope } from "./components/Export/ExportModal";
 import { useStore } from "./store/useStore";
+import { Auth } from "./components/Auth";
+import { supabase } from "./lib/supabaseClient";
 
 function App() {
   const topics = useStore((s) => s.topics);
   const folders = useStore((s) => s.folders);
   const selectedTopicId = useStore((s) => s.selectedTopicId);
+  const session = useStore((s) => s.session);
 
   const loadFolders = useStore((s) => s.loadFolders);
   const loadTopics = useStore((s) => s.loadTopics);
+  const loadUserProfile = useStore((s) => s.loadUserProfile);
+  const setSession = useStore((s) => s.setSession);
 
   const [exportScope, setExportScope] = useState<ExportScope | null>(null);
 
   useEffect(() => {
-    loadFolders();
-    loadTopics();
-  }, [loadFolders, loadTopics]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [setSession]);
+
+  useEffect(() => {
+    if (session) {
+      loadUserProfile();
+      loadFolders();
+      loadTopics();
+    }
+  }, [session, loadFolders, loadTopics, loadUserProfile]);
+
+  if (!session) {
+    return <Auth />;
+  }
 
   const selectedTopic = topics.find((t) => t.id === selectedTopicId);
 
