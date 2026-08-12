@@ -1,9 +1,10 @@
-import { Download, FolderOutput, Library, Upload } from "lucide-react";
+import { Download, FolderOutput, Info, Library, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useStore } from "../store/useStore";
 import type { BackupFile, CodeBankData } from "../types";
 import { Button } from "./common/Button";
 import { ConfirmDialog } from "./common/ConfirmDialog";
+import { AboutModal } from "./AboutModal";
 
 interface HeaderProps {
   onExportAll: () => void;
@@ -23,6 +24,7 @@ export function Header({ onExportAll }: HeaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingRestore, setPendingRestore] = useState<CodeBankData | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   const handleBackup = () => {
     const backup: BackupFile = buildBackup();
@@ -81,6 +83,14 @@ export function Header({ onExportAll }: HeaderProps) {
         <Button variant="ghost" size="sm" icon={<Download size={14} />} onClick={handleBackup}>
           نسخة احتياطية
         </Button>
+        <button
+          onClick={() => setAboutOpen(true)}
+          className="grid h-8 w-8 place-items-center rounded-md border border-ink-600 bg-ink-800 text-mist-400 hover:bg-ink-700 hover:text-mist-100 transition-colors"
+          aria-label="حول المطور"
+          title="حول المطور"
+        >
+          <Info size={14} />
+        </button>
         <Button variant="primary" size="sm" icon={<FolderOutput size={14} />} onClick={onExportAll}>
           تصدير المرجع الكامل
         </Button>
@@ -99,6 +109,8 @@ export function Header({ onExportAll }: HeaderProps) {
         }}
         onCancel={() => setPendingRestore(null)}
       />
+
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </header>
   );
 }
